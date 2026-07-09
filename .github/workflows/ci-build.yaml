@@ -1,0 +1,22 @@
+name: build
+on:
+  push:
+    branches:
+      - main
+      - release/*
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+
+  release-please:
+    runs-on: custom
+    steps:
+      # maintain the release-pr, create versions tag after merging the release-pr, etc
+      - uses: googleapis/release-please-action@v4
+        id: release-please
+        with:
+          target-branch: ${{ github.ref_name }}
