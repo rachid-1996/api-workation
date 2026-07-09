@@ -1,0 +1,204 @@
+openapi: 3.1.0
+info:
+  title: Coding Challenge API
+  version: 1.0.0
+  summary: API-first contract for Angular + Spring Boot (Java 21)
+  description: >
+    Single source of truth for backend and frontend generation.
+    Designed for contract-first implementation.
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development
+
+tags:
+  - name: Items
+    description: Core domain operations
+
+paths:
+  /workflex/workation:
+    get:
+      tags: [ Workflex ]
+      summary: List all workations
+      operationId: listWorkations
+      description: Retrieve a complete list of workation records without pagination
+      responses:
+        '200':
+          description: Successfully retrieved list of workations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkationListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+
+
+components:
+
+  responses:
+    BadRequest:
+      description: Validation/request error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    Conflict:
+      description: State/uniqueness conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+
+  schemas:
+
+    WorkationListResponse:
+      type: object
+      additionalProperties: false
+      required: [ workations, count ]
+      properties:
+        workations:
+          type: array
+          description: List of all workation records
+          items:
+            $ref: '#/components/schemas/WorkationResponse'
+        count:
+          type: integer
+          minimum: 0
+          description: Total number of workations in the system
+
+
+    WorkationResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - employee
+        - origin
+        - destination
+        - startDate
+        - endDate
+        - workingDays
+        - risks
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique workation identifier
+        employee:
+          type: object
+          additionalProperties: false
+          required: [ id, name, email ]
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              minLength: 1
+              maxLength: 255
+            email:
+              type: string
+              format: email
+        origin:
+          type: string
+          description: Employee's home/primary office location (city, country)
+          minLength: 1
+          maxLength: 255
+          example: "San Francisco, USA"
+        destination:
+          type: string
+          description: Workation destination (city, country)
+          minLength: 1
+          maxLength: 255
+          example: "Barcelona, Spain"
+        startDate:
+          type: string
+          format: date
+          description: Workation start date (ISO 8601)
+          example: "2025-06-01"
+        endDate:
+          type: string
+          format: date
+          description: Workation end date (ISO 8601)
+          example: "2025-06-15"
+        workingDays:
+          type: integer
+          minimum: 1
+          description: Total number of working days during the workation
+          example: 10
+        risks:
+          type: array
+          description: List of identified risks for this workation
+          items:
+            type: object
+            additionalProperties: false
+            required: [ id, category, severity, description ]
+            properties:
+              id:
+                type: string
+                format: uuid
+              category:
+                type: string
+                enum: [ TIMEZONE, CONNECTIVITY, COMPLIANCE, HEALTH, OTHER ]
+                description: Risk category
+              severity:
+                type: string
+                enum: [ LOW, MEDIUM, HIGH, CRITICAL ]
+              description:
+                type: string
+                minLength: 1
+                maxLength: 500
+              mitigation:
+                type: [ string, 'null' ]
+                maxLength: 1000
+                description: Mitigation strategy for this risk
+        status:
+          $ref: '#/components/schemas/WorkationStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WorkationStatus:
+      type: string
+      enum: [ HIGH_RISK, NO_RISK, LOW_RISK ]
+      description: Current approval status of the workation request
+
+    ApiError:
+      type: object
+      additionalProperties: false
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          minimum: 100
+          maximum: 599
+        error:
+          type: string
+          examples: [Bad Request]
+        message:
+          type: string
+        path:
+          type: string
+        details:
+          type: [array, 'null']
+          items:
+            type: string
