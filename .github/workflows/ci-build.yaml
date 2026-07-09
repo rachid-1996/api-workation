@@ -20,3 +20,17 @@ jobs:
         id: release-please
         with:
           target-branch: ${{ github.ref_name }}
+
+  maven-build:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Maven verify
+        run: mvn -B verify
